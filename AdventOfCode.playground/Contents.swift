@@ -88,21 +88,45 @@ func day1_1() {
 
 }
 
-day1_1()
+//day1_1()
 
 var freqToCount = [0:1]
 func day1_2() {
-    if var fileURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first {
-        fileURL.appendPathComponent("Projects/adventOfCode/input.txt")
-        print(fileURL.path)
+    var total = 0
+    let fileIterator = { (fileURL: URL, total: Int) -> (Int, Bool) in
+        var total = total
+        var secondFrequency = false
         do {
-            try String(contentsOf: fileURL, encoding: .utf8).components(separatedBy: "\n").forEach {
-                
+            // need to drop last because that is an empty string
+            let numbers = try String(contentsOf: fileURL, encoding: .utf8).components(separatedBy: "\n").dropLast()
+            for number in numbers {
+                let numWithOperator = NumberWithOperator(number)
+                let totalWithOperator = NumberWithOperator(String(total))
+                total = NumberWithOperator.calculate(first: totalWithOperator, second: numWithOperator)
+                if let existingNumber = freqToCount[total] {
+                    freqToCount[total] = existingNumber + 1
+                    if freqToCount[total] == 2 {
+                        secondFrequency = true
+                        break
+                    }
+                } else {
+                    freqToCount[total] = 1
+                }
             }
         } catch {
             print(error.localizedDescription)
-            return
+            return (0, false)
         }
+        return (total, secondFrequency)
+    }
+    if var fileURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first {
+        fileURL.appendPathComponent("Projects/adventOfCode/input_1.txt")
+        var loopFile = fileIterator(fileURL, total)
+        while !loopFile.1 {
+            total = loopFile.0
+            loopFile = fileIterator(fileURL, total)
+        }
+        print(loopFile)
     }
 }
 
